@@ -13,7 +13,7 @@
 #include <linux/moduleparam.h>
 #include <linux/sched.h>
 #include <linux/syscore_ops.h>
-#include <linux/hrtimer.h>
+#include <linux/timer.h>
 #include <linux/sched_clock.h>
 
 struct clock_data {
