@@ -117,7 +117,7 @@ int cpuidle_idle_call(void)
 {
 	struct cpuidle_device *dev = __this_cpu_read(cpuidle_devices);
 	struct cpuidle_driver *drv;
-	int next_state, entered_state;
+	int next_state, entered_state = 0;
 	bool broadcast;
 
 	if (off || !initialized)
