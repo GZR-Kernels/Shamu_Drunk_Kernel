@@ -3044,7 +3044,7 @@ void scheduler_tick(void)
 }
 
 #ifdef CONFIG_NO_HZ_FULL
-static u32 sched_tick_max_deferment = HZ;
+static u32 sched_tick_max_deferment = -1;
 
 /**
  * scheduler_tick_max_deferment
