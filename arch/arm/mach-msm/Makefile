@@ -140,4 +140,4 @@ obj-$(CONFIG_MMI_UNIT_INFO) += mmi-unit-info.o
 obj-$(CONFIG_MMI_SOC_INFO) += mmi_soc_info.o
 obj-$(CONFIG_FORCE_FAST_CHARGE) += fastchg.o
 obj-$(CONFIG_MSM_HOTPLUG) += msm_hotplug.o
-
+obj-$(CONFIG_BRICKED_HOTPLUG) += bricked_hotplug.o
