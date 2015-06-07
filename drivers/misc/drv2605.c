@@ -163,6 +163,9 @@
 #define I2C_RETRY_DELAY		20 /* ms */
 #define I2C_RETRIES		5
 
+static struct kobject *vibe_kobj;
+static int vibe_strength;
+
 /*
  * Default RTP_STRENGTH is 0x7F which in decimal is 127
  * it's a little to harsh, let's try 100 as the default
@@ -439,7 +442,7 @@ static void drv2605_select_library(char lib)
 	drv260x_write_reg_val(library, sizeof(library));
 }
 
-static void drv260x_set_rtp_val(char value)
+static void drv260x_set_rtp_val((char)vibe_strength);
 {
 	char rtp_val[] = {
 		REAL_TIME_PLAYBACK_REG, value
@@ -1212,10 +1215,31 @@ static DEVICE_ATTR(rtp_strength, (S_IWUSR|S_IRUGO),
 struct kobject *drv2605_kobj;
 EXPORT_SYMBOL_GPL(drv2605_kobj);
 
+static ssize_t pwmvalue_show(struct device *dev,
+                struct device_attribute *attr, char *buf)
+{
+        size_t count = 0;
+        count += sprintf(buf, "%d\n", vibe_strength);
+        return count;
+}
+
+static ssize_t pwmvalue_store(struct device *dev,
+                struct device_attribute *attr, const char *buf, size_t count)
+{
+	int vs = 0;
+        sscanf(buf, "%d ",&vs);
+        if (vs < 0 || vs > 127) vs = 100;
+	vibe_strength = vs;
+        return count;
+}
+
+static DEVICE_ATTR(pwmvalue, (S_IWUSR|S_IRUGO), pwmvalue_show, pwmvalue_store);
+
 static int drv260x_init(void)
 {
 	int reval = -ENOMEM;
 
+	vibe_strength = REAL_TIME_PLAYBACK_STRENGTH;
 	drv260x = kmalloc(sizeof *drv260x, GFP_KERNEL);
 	if (!drv260x) {
 		printk(KERN_ALERT
@@ -1280,6 +1304,10 @@ static int drv260x_init(void)
 	}
 
 	printk(KERN_ALERT "drv260x: initialized\n");
+
+	vibe_kobj = kobject_create_and_add("vibrator", NULL);
+	if (!vibe_kobj) return 0;
+	reval = sysfs_create_file(vibe_kobj, &dev_attr_pwmvalue.attr);	
 	return 0;
 
  fail6:
@@ -1297,7 +1325,7 @@ static int drv260x_init(void)
 
 static void drv260x_exit(void)
 {
-	kobject_del(drv2605_kobj);
+	kobject_del((drv2605_kobj) vibe_kobj);
 	gpio_direction_output(drv260x->en_gpio, GPIO_LEVEL_LOW);
 	gpio_free(drv260x->en_gpio);
 	if (!IS_ERR(drv260x->vibrator_vdd))
