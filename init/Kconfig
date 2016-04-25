@@ -83,6 +83,13 @@ config LOCALVERSION_AUTO
 
 	  which is done within the script "scripts/setlocalversion".)
 
+config TIPSY_EXTRAVERSION
+	bool "Tipsy Kernel Name"
+	default n
+	help
+	  Enabling this option will add "_Tipsy_Custom_Drink" to the localversion.
+	  This should only be enabled for devices that uses tipsy kernel changes.
+
 config HAVE_KERNEL_GZIP
 	bool
 
