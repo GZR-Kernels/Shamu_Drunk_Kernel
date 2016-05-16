@@ -1323,7 +1323,7 @@ static int drv260x_init(void)
 
 static void drv260x_exit(void)
 {
-	kobject_del(drv2605_kobj);
+	kobject_del(vibe_kobj);
 	gpio_direction_output(drv260x->en_gpio, GPIO_LEVEL_LOW);
 	gpio_free(drv260x->en_gpio);
 	if (!IS_ERR(drv260x->vibrator_vdd))
