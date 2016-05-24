@@ -184,8 +184,8 @@ else
 	# LOCALVERSION= is not specified
 	if test "${LOCALVERSION+set}" != "set"; then
 		scm=$(scm_version --short)
-		if test "$CONFIG_TIPSY_EXTRAVERSION" = "y"; then
-		res="_Tipsy_Custom_Drink"
+		if test "$CONFIG_GZR_EXTRAVERSION" = "y"; then
+		res="_GZR_Drunk_Engine"
 		else
 		res="$res"
 		fi
