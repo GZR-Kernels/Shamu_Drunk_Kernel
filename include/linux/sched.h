@@ -1180,7 +1180,6 @@ struct task_struct {
 	atomic_t usage;
 	unsigned int flags;	/* per process flags, defined below */
 	unsigned int ptrace;
-	unsigned int yield_count;
 
 #if defined(CONFIG_SMP) && !defined(CONFIG_SCHED_BFS)
 	struct llist_node wake_entry;
