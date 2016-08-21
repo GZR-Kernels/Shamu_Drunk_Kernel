@@ -111,7 +111,6 @@ obj-$(CONFIG_ARCH_MSM8610) += gpiomux-v2.o gpiomux.o
 obj-$(CONFIG_ARCH_APQ8084) += gpiomux-v2.o gpiomux.o
 obj-$(CONFIG_ARCH_FSM9900) += gpiomux-v2.o gpiomux.o
 
-obj-$(CONFIG_BLU_PLUG) += blu_plug.o
 obj-$(CONFIG_MSM_RUN_QUEUE_STATS) += msm_rq_stats.o
 obj-$(CONFIG_MSM_NATIVE_RESTART) += restart.o
 
@@ -144,4 +143,5 @@ obj-$(CONFIG_BRICKED_HOTPLUG) += bricked_hotplug.o
 obj-$(CONFIG_DYN_HOTPLUG)     += dyn_hotplug.o
 obj-$(CONFIG_BLU_PLUG)        += blu_plug.o
 obj-$(CONFIG_ZEN_DECISION) += msm_zen_decision.o
+obj-$(CONFIG_INTELLI_HOTPLUG) += intelli_hotplug.o
 obj-$(CONFIG_MSM_SLEEPER) += msm-sleeper.o
