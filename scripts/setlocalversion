@@ -184,7 +184,11 @@ else
 	# LOCALVERSION= is not specified
 	if test "${LOCALVERSION+set}" != "set"; then
 		scm=$(scm_version --short)
+		if test "$CONFIG_GZR_EXTRAVERSION" = "y"; then
+		res="_GZR_Drunk_Kernel"
+		else
 		res="$res"
+		fi
 	fi
 fi
 

@@ -83,6 +83,13 @@ config LOCALVERSION_AUTO
 
 	  which is done within the script "scripts/setlocalversion".)
 
+config GZR_EXTRAVERSION
+	bool "GZR Kernel Name"
+	default y
+	help
+	  Enabling this option will add "_GZR_Drunk_Kernel" to the localversion.
+          This should only be enabled for devices that uses GZR kernel changes.
+
 config HAVE_KERNEL_GZIP
 	bool
 
