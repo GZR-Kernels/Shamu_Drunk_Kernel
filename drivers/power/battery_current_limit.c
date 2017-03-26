@@ -39,6 +39,9 @@
 #define BTM_8084_FREQ_MITIG_LIMIT 1958400
 #define BTM_SMB135X_VOLTAGE_MIN 2750000
 
+static bool bcl_hotplug_enable = false;
+module_param(bcl_hotplug_enable, bool, 0644);
+
 static char *battery_str = "battery";
 /*
  * Battery Current Limit Enable or Not
@@ -134,7 +137,7 @@ struct bcl_context {
 	int bcl_vbat_min;
 	/* BCL period poll delay work structure  */
 	struct workqueue_struct		*battery_monitor_wq;
-	struct work_struct		battery_monitor_work;
+	struct delayed_work		battery_monitor_work;
 	/* The max CPU frequency the BTM restricts during high load */
 	uint32_t btm_freq_max;
 	uint32_t btm_gpu_freq_max;
@@ -181,6 +184,8 @@ static DEFINE_MUTEX(bcl_notify_mutex);
 static struct power_supply bcl_psy;
 static const char bcl_psy_name[] = "bcl";
 static bool bcl_hit_shutdown_voltage;
+static bool in_progress;
+
 static int bcl_battery_get_property(struct power_supply *psy,
 				enum power_supply_property prop,
 				union power_supply_propval *val)
@@ -274,7 +279,9 @@ static void battery_monitor_work(struct work_struct *work)
 {
 	int vbatt;
 	struct bcl_context *bcl = container_of(work,
-			struct bcl_context, battery_monitor_work);
+			struct bcl_context, battery_monitor_work.work);
+
+	in_progress = false;
 
 	if (gbcl->bcl_mode == BCL_DEVICE_ENABLED) {
 		bcl->btm_mode = BCL_VPH_MONITOR_MODE;
@@ -306,7 +313,12 @@ static void bcl_vph_notify(enum bcl_threshold_state thresh_type)
 		thresh_type == BCL_HIGH_THRESHOLD ? "high" :
 		"unknown");
 	bcl_vph_state = thresh_type;
-	queue_work(gbcl->battery_monitor_wq, &gbcl->battery_monitor_work);
+	if (!in_progress) {
+		in_progress = true;
+		queue_delayed_work(gbcl->battery_monitor_wq,
+			&gbcl->battery_monitor_work,
+			msecs_to_jiffies(gbcl->bcl_poll_interval_msec));
+	}
 }
 
 static void bcl_vph_notification(enum qpnp_tm_state state, void *ctx);
@@ -1100,6 +1112,7 @@ static int bcl_probe(struct platform_device *pdev)
 {
 	struct bcl_context *bcl = NULL;
 	int ret = 0;
+	enum bcl_device_mode bcl_mode = BCL_DEVICE_DISABLED;
 
 	bcl = devm_kzalloc(&pdev->dev, sizeof(struct bcl_context), GFP_KERNEL);
 	if (!bcl) {
@@ -1110,9 +1123,10 @@ static int bcl_probe(struct platform_device *pdev)
 	/* For BCL */
 	/* Init default BCL params */
 	if (of_property_read_bool(pdev->dev.of_node, "qcom,bcl-enable"))
-		bcl->bcl_mode = BCL_DEVICE_ENABLED;
+		bcl_mode = BCL_DEVICE_ENABLED;
 	else
-		bcl->bcl_mode = BCL_DEVICE_DISABLED;
+		bcl_mode = BCL_DEVICE_DISABLED;
+	bcl->bcl_mode = BCL_DEVICE_DISABLED;
 	bcl->dev = &pdev->dev;
 	bcl->bcl_monitor_type = BCL_IBAT_MONITOR_TYPE;
 	bcl->bcl_threshold_mode[BCL_LOW_THRESHOLD_TYPE] =
@@ -1144,9 +1158,9 @@ static int bcl_probe(struct platform_device *pdev)
 			pr_err("Requesting  battery_monitor wq failed\n");
 			return 0;
 	}
-	INIT_WORK(&bcl->battery_monitor_work, battery_monitor_work);
-	if (bcl->bcl_mode == BCL_DEVICE_ENABLED)
-		bcl_mode_set(bcl->bcl_mode);
+	INIT_DEFERRABLE_WORK(&bcl->battery_monitor_work, battery_monitor_work);
+	if (bcl_mode == BCL_DEVICE_ENABLED)
+		bcl_mode_set(bcl_mode);
 	return 0;
 }
 

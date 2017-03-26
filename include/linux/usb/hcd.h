@@ -437,6 +437,7 @@ extern const struct dev_pm_ops usb_hcd_pci_pm_ops;
 #endif /* CONFIG_PCI */
 
 /* pci-ish (pdev null is ok) buffer alloc/mapping support */
+void usb_init_pool_max(void);
 int hcd_buffer_create(struct usb_hcd *hcd);
 void hcd_buffer_destroy(struct usb_hcd *hcd);
 
@@ -616,10 +617,16 @@ extern int hcd_bus_resume(struct usb_device *rhdev, pm_message_t msg);
 
 #ifdef CONFIG_PM_RUNTIME
 extern void usb_hcd_resume_root_hub(struct usb_hcd *hcd);
+extern int usb_intf_with_pwr_usage_cnt(struct usb_hcd *hcd);
 #else
 static inline void usb_hcd_resume_root_hub(struct usb_hcd *hcd)
 {
 	return;
+}
+
+static inline int usb_intf_with_pwr_usage_cnt(struct usb_hcd *hcd)
+{
+	return -ENXIO;
 }
 #endif /* CONFIG_PM_RUNTIME */
 

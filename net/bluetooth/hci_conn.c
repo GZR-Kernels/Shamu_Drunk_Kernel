@@ -1,6 +1,7 @@
 /*
    BlueZ - Bluetooth protocol stack for Linux
-   Copyright (c) 2000-2001, 2010, Code Aurora Forum. All rights reserved.
+   Copyright (c) 2000-2001, 2010, 2014, Code Aurora Forum. All rights
+   reserved.
 
    Written 2000,2001 by Maxim Krasnyansky <maxk@qualcomm.com>
 
@@ -369,6 +370,7 @@ struct hci_conn *hci_conn_add(struct hci_dev *hdev, int type,
 		return NULL;
 
 	bacpy(&conn->dst, dst);
+	bacpy(&conn->src, &hdev->bdaddr);
 	conn->hdev  = hdev;
 	conn->type  = type;
 	conn->mode  = HCI_CM_ACTIVE;
@@ -465,8 +467,9 @@ int hci_conn_del(struct hci_conn *conn)
 		amp_mgr_put(conn->amp_mgr);
 
 	hci_conn_hash_del(hdev, conn);
-	if (hdev->notify)
-		hdev->notify(hdev, HCI_NOTIFY_CONN_DEL);
+	if (hdev->notify &&
+		(conn->type == SCO_LINK || conn->type == ESCO_LINK))
+			hdev->notify(hdev, HCI_NOTIFY_CONN_DEL);
 
 	skb_queue_purge(&conn->data_q);
 
@@ -542,6 +545,15 @@ static struct hci_conn *hci_connect_le(struct hci_dev *hdev, bdaddr_t *dst,
 
 	le->pending_sec_level = sec_level;
 	le->auth_type = auth_type;
+	if (dst_type == BDADDR_LE_PUBLIC)
+		le->dst_type = ADDR_LE_DEV_PUBLIC;
+	else
+		le->dst_type = ADDR_LE_DEV_RANDOM;
+
+	if (bacmp(&hdev->bdaddr, BDADDR_ANY))
+		le->src_type = ADDR_LE_DEV_PUBLIC;
+	else
+		le->src_type = ADDR_LE_DEV_RANDOM;
 
 	hci_conn_hold(le);
 
@@ -684,7 +696,7 @@ static int hci_conn_auth(struct hci_conn *conn, __u8 sec_level, __u8 auth_type)
 		/* If we're already encrypted set the REAUTH_PEND flag,
 		 * otherwise set the ENCRYPT_PEND.
 		 */
-		if (conn->key_type != 0xff)
+		if (conn->link_mode & HCI_LM_ENCRYPT)
 			set_bit(HCI_CONN_REAUTH_PEND, &conn->flags);
 		else
 			set_bit(HCI_CONN_ENCRYPT_PEND, &conn->flags);

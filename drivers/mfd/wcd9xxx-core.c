@@ -122,6 +122,25 @@ int wcd9xxx_reg_read(
 }
 EXPORT_SYMBOL(wcd9xxx_reg_read);
 
+#ifdef CONFIG_SOUND_CONTROL
+int wcd9xxx_reg_read_safe(
+	struct wcd9xxx_core_resource *core_res,
+	unsigned short reg)
+{
+	u8 val;
+	int ret;
+
+	struct wcd9xxx *wcd9xxx = (struct wcd9xxx *) core_res->parent;
+	ret = wcd9xxx_read(wcd9xxx, reg, 1, &val, false);
+
+	if (ret < 0)
+		return ret;
+	else
+		return val;
+}
+EXPORT_SYMBOL_GPL(wcd9xxx_reg_read_safe);
+#endif
+
 static int wcd9xxx_write(struct wcd9xxx *wcd9xxx, unsigned short reg,
 			int bytes, void *src, bool interface_reg)
 {
@@ -1907,7 +1926,6 @@ static int wcd9xxx_slim_device_down(struct slim_device *sldev)
 {
 	struct wcd9xxx *wcd9xxx = slim_get_devicedata(sldev);
 
-	dev_info(wcd9xxx->dev, "%s: device down\n", __func__);
 	if (!wcd9xxx) {
 		pr_err("%s: wcd9xxx is NULL\n", __func__);
 		return -EINVAL;
